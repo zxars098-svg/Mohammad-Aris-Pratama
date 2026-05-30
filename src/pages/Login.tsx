@@ -72,16 +72,6 @@ export const Login: React.FC = () => {
           </p>
         </div>
 
-        {/* Credentials Helper Card */}
-        <div className="mb-6 rounded-xl border border-indigo-100 bg-indigo-50/50 p-4 text-xs text-indigo-700 dark:border-indigo-950/40 dark:bg-indigo-950/20 dark:text-indigo-300">
-          <div className="flex items-center gap-2 font-bold mb-1">
-            <ShieldCheck className="h-4 w-4" />
-            <span>Kredensial Default Admin:</span>
-          </div>
-          <p className="font-mono">Email: <span className="font-bold">admin@portfolio.com</span></p>
-          <p className="font-mono mt-0.5">Password: <span className="font-bold">password</span></p>
-        </div>
-
         {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-5">
           {(localError || error) && (
@@ -103,7 +93,7 @@ export const Login: React.FC = () => {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="admin@portfolio.com"
+                placeholder="email@example.com"
                 className="w-full rounded-xl border border-slate-200 bg-white/50 pl-10 pr-4 py-3 text-sm text-slate-900 outline-none transition-all focus:border-indigo-500 focus:bg-white dark:border-slate-800 dark:bg-slate-950/50 dark:text-white dark:focus:border-indigo-500 dark:focus:bg-slate-950"
                 required
               />
