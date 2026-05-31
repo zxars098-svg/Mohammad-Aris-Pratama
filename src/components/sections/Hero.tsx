@@ -150,7 +150,7 @@ export const Hero: React.FC = () => {
             >
               <div className="space-y-1">
                 <div className="text-2xl sm:text-3xl font-black text-indigo-600 dark:text-indigo-400 flex items-center gap-1">
-                  5+
+                  2+
                 </div>
                 <div className="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
                   Tahun Pengalaman

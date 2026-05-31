@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './hooks/useAuth';
 import { ThemeProvider } from './hooks/useTheme';
@@ -8,8 +8,19 @@ import { LoadingScreen } from './components/LoadingScreen';
 import { Home } from './pages/Home';
 import { Login } from './pages/Login';
 import { Dashboard } from './pages/Dashboard';
+import { syncDatabaseWithServer } from './services/db';
 
 function App() {
+  const [isReady, setIsReady] = useState(false);
+
+  useEffect(() => {
+    syncDatabaseWithServer().finally(() => setIsReady(true));
+  }, []);
+
+  if (!isReady) {
+    return <LoadingScreen />;
+  }
+
   return (
     <ThemeProvider>
       <AuthProvider>

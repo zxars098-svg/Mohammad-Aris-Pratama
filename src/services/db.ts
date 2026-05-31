@@ -1,11 +1,63 @@
 import { Profile, Project, Skill, Education, Testimonial, DashboardStats } from '../types';
 
+const API_BASE = import.meta.env.VITE_API_URL ?? '';
+const useApi = API_BASE !== '';
+
+const apiFetch = async (endpoint: string, options: RequestInit = {}) => {
+  const response = await fetch(`${API_BASE}/api/${endpoint}`, {
+    headers: { 'Content-Type': 'application/json' },
+    ...options,
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(errorText || `API request failed with status ${response.status}`);
+  }
+
+  return response.json();
+};
+
+const sendToApi = (endpoint: string, method: string, body?: unknown) => {
+  if (!useApi) return;
+  fetch(`${API_BASE}/api/${endpoint}`, {
+    method,
+    headers: { 'Content-Type': 'application/json' },
+    body: body ? JSON.stringify(body) : undefined,
+  }).catch((error) => {
+    console.warn('API sync failed:', error);
+  });
+};
+
+export const syncDatabaseWithServer = async () => {
+  if (!useApi) return;
+
+  try {
+    const [profile, projects, skills, education, testimonials] = await Promise.all([
+      apiFetch('profile'),
+      apiFetch('projects'),
+      apiFetch('skills'),
+      apiFetch('education'),
+      apiFetch('testimonials'),
+    ]);
+
+    if (profile) localStorage.setItem('portfolio_profile', JSON.stringify(profile));
+    if (projects) localStorage.setItem('portfolio_projects', JSON.stringify(projects));
+    if (skills) localStorage.setItem('portfolio_skills', JSON.stringify(skills));
+    if (education) localStorage.setItem('portfolio_education', JSON.stringify(education));
+    if (testimonials) localStorage.setItem('portfolio_testimonials', JSON.stringify(testimonials));
+  } catch (error) {
+    console.warn('Failed to sync db with server:', error);
+  } finally {
+    initializeDB();
+  }
+};
+
 // Initial Mock Seed Data
 const INITIAL_PROFILE: Profile = {
   id: "profile-1",
   nama: "Mohammad Aris Pratama",
   foto: "https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg?auto=compress&cs=tinysrgb&w=600",
-  bio: "Senior Full-Stack Developer & UI/UX enthusiast dengan 5+ tahun pengalaman membangun aplikasi web modern berskala besar. Spesialisasi dalam React, Next.js, Node.js, dan arsitektur cloud. Berfokus pada performa tinggi, animasi interaktif premium, dan pengalaman pengguna yang luar biasa.",
+  bio: "Senior Full-Stack Developer & UI/UX enthusiast dengan 2+ tahun pengalaman membangun aplikasi web modern berskala besar. Spesialisasi dalam React, Next.js, Node.js, dan arsitektur cloud. Berfokus pada performa tinggi, animasi interaktif premium, dan pengalaman pengguna yang luar biasa.",
   email: "rian.wijaya@dev.com",
   telepon: "+62 812-3456-7890",
   alamat: "Jakarta, Indonesia",
@@ -186,6 +238,7 @@ export const dbService = {
     localStorage.setItem('portfolio_profile', JSON.stringify(profile));
     // Trigger custom event to notify components
     window.dispatchEvent(new Event('portfolio_db_update'));
+    sendToApi('profile', 'PUT', profile);
     return profile;
   },
 
@@ -208,6 +261,7 @@ export const dbService = {
     projects.push(newProject);
     localStorage.setItem('portfolio_projects', JSON.stringify(projects));
     window.dispatchEvent(new Event('portfolio_db_update'));
+    sendToApi('projects', 'POST', newProject);
     return newProject;
   },
   updateProject: (id: string, updatedData: Partial<Project>): Project => {
@@ -218,6 +272,7 @@ export const dbService = {
     projects[index] = { ...projects[index], ...updatedData };
     localStorage.setItem('portfolio_projects', JSON.stringify(projects));
     window.dispatchEvent(new Event('portfolio_db_update'));
+    sendToApi(`projects/${id}`, 'PUT', updatedData);
     return projects[index];
   },
   deleteProject: (id: string): boolean => {
@@ -225,6 +280,7 @@ export const dbService = {
     const filtered = projects.filter(p => p.id !== id);
     localStorage.setItem('portfolio_projects', JSON.stringify(filtered));
     window.dispatchEvent(new Event('portfolio_db_update'));
+    sendToApi(`projects/${id}`, 'DELETE');
     return true;
   },
 
@@ -243,6 +299,7 @@ export const dbService = {
     skills.push(newSkill);
     localStorage.setItem('portfolio_skills', JSON.stringify(skills));
     window.dispatchEvent(new Event('portfolio_db_update'));
+    sendToApi('skills', 'POST', newSkill);
     return newSkill;
   },
   updateSkill: (id: string, updatedData: Partial<Skill>): Skill => {
@@ -253,6 +310,7 @@ export const dbService = {
     skills[index] = { ...skills[index], ...updatedData };
     localStorage.setItem('portfolio_skills', JSON.stringify(skills));
     window.dispatchEvent(new Event('portfolio_db_update'));
+    sendToApi(`skills/${id}`, 'PUT', updatedData);
     return skills[index];
   },
   deleteSkill: (id: string): boolean => {
@@ -260,6 +318,7 @@ export const dbService = {
     const filtered = skills.filter(s => s.id !== id);
     localStorage.setItem('portfolio_skills', JSON.stringify(filtered));
     window.dispatchEvent(new Event('portfolio_db_update'));
+    sendToApi(`skills/${id}`, 'DELETE');
     return true;
   },
 
@@ -280,6 +339,7 @@ export const dbService = {
     education.sort((a, b) => parseInt(b.tahunMulai) - parseInt(a.tahunMulai));
     localStorage.setItem('portfolio_education', JSON.stringify(education));
     window.dispatchEvent(new Event('portfolio_db_update'));
+    sendToApi('education', 'POST', newEdu);
     return newEdu;
   },
   updateEducation: (id: string, updatedData: Partial<Education>): Education => {
@@ -291,6 +351,7 @@ export const dbService = {
     education.sort((a, b) => parseInt(b.tahunMulai) - parseInt(a.tahunMulai));
     localStorage.setItem('portfolio_education', JSON.stringify(education));
     window.dispatchEvent(new Event('portfolio_db_update'));
+    sendToApi(`education/${id}`, 'PUT', updatedData);
     return education[index];
   },
   deleteEducation: (id: string): boolean => {
@@ -298,6 +359,7 @@ export const dbService = {
     const filtered = education.filter(e => e.id !== id);
     localStorage.setItem('portfolio_education', JSON.stringify(filtered));
     window.dispatchEvent(new Event('portfolio_db_update'));
+    sendToApi(`education/${id}`, 'DELETE');
     return true;
   },
 
@@ -316,6 +378,7 @@ export const dbService = {
     testimonials.push(newTestimonial);
     localStorage.setItem('portfolio_testimonials', JSON.stringify(testimonials));
     window.dispatchEvent(new Event('portfolio_db_update'));
+    sendToApi('testimonials', 'POST', newTestimonial);
     return newTestimonial;
   },
   updateTestimonial: (id: string, updatedData: Partial<Testimonial>): Testimonial => {
@@ -326,6 +389,7 @@ export const dbService = {
     testimonials[index] = { ...testimonials[index], ...updatedData };
     localStorage.setItem('portfolio_testimonials', JSON.stringify(testimonials));
     window.dispatchEvent(new Event('portfolio_db_update'));
+    sendToApi(`testimonials/${id}`, 'PUT', updatedData);
     return testimonials[index];
   },
   deleteTestimonial: (id: string): boolean => {
@@ -333,6 +397,7 @@ export const dbService = {
     const filtered = testimonials.filter(t => t.id !== id);
     localStorage.setItem('portfolio_testimonials', JSON.stringify(filtered));
     window.dispatchEvent(new Event('portfolio_db_update'));
+    sendToApi(`testimonials/${id}`, 'DELETE');
     return true;
   },
 

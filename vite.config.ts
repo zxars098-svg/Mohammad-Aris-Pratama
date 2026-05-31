@@ -21,5 +21,10 @@ export default defineConfig(async ({ mode }) => {
     plugins,
     envPrefix: ['VITE_', 'NEXT_PUBLIC_'],
     define: processEnvDefines,
+    server: {
+      proxy: {
+        '/api': 'http://localhost:4000'
+      }
+    }
   };
 })
